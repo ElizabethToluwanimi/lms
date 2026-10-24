@@ -1,0 +1,2747 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  BookOpen,
+  Award,
+  Users,
+  CreditCard,
+  CheckCircle2,
+  Calendar,
+  Layers,
+  ArrowRight,
+  ShieldCheck,
+  BarChart3,
+  Video,
+  FileText,
+  Clock,
+  Sparkles,
+  ChevronRight,
+  Menu,
+  X,
+  ExternalLink,
+  Laptop,
+  GraduationCap,
+  Briefcase,
+  PlayCircle,
+  HelpCircle,
+  Building,
+  Lock,
+  Download,
+  Filter,
+  Search,
+  MessageSquare,
+  PhoneCall,
+  Check,
+  AlertCircle,
+  Settings,
+  Database,
+  ChevronDown
+} from 'lucide-react';
+
+export default function App() {
+  // Navigation & Page routing state
+  const [activeTab, setActiveTab] = useState('home'); // 'home', 'solutions', 'features', 'demo', 'process', 'cases', 'faq', 'consultation'
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+
+  // Demo Sandbox state
+  const [demoPersona, setDemoPersona] = useState('student'); // 'student', 'instructor', 'admin'
+  const [demoSelectedCourse, setDemoSelectedCourse] = useState('fintech-leadership');
+  const [demoCompletedLessons, setDemoCompletedLessons] = useState(['m1-l1', 'm1-l2']);
+  const [activeQuizQuestion, setActiveQuizQuestion] = useState(0);
+  const [quizSelectedOption, setQuizSelectedOption] = useState(null);
+  const [quizScore, setQuizScore] = useState(null);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [adminSearchQuery, setAdminSearchQuery] = useState('');
+  const [adminFilterStatus, setAdminFilterStatus] = useState('all');
+
+  // Consultation Leads state (persisted in localStorage for demo interactivity)
+  const [leads, setLeads] = useState(() => {
+    const saved = localStorage.getItem('arete_lms_leads');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { /* use default */ }
+    }
+    return [
+      {
+        id: 'LEAD-8941',
+        name: 'Dr. Adebayo Ogunlesi',
+        orgName: 'West African Institute of Governance',
+        email: 'a.ogunlesi@waig-edu.ng',
+        phone: '+234 803 555 0192',
+        orgType: 'Executive Education & Policy',
+        deliveryMethod: 'WhatsApp groups & Google Drive PDFs',
+        hasExistingLms: 'No, looking for our first branded platform',
+        coreProblem: 'Tracking 350+ executive students across 4 West African countries manually with paper certificates.',
+        expectedLearners: '500 - 1,500',
+        courseFormat: 'Hybrid (Recorded + Live Zoom sessions)',
+        budget: '$3,000 - $7,000 / NGN 4.5M - 10M',
+        timeline: 'Within 4-8 weeks',
+        preferredChannel: 'Google Meet',
+        date: '2026-11-04',
+        time: '14:00 WAT',
+        status: 'Consultation scheduled',
+        notes: 'Needs Paystack + Stripe split currency payout capability.'
+      },
+      {
+        id: 'LEAD-8942',
+        name: 'Funke Balogun',
+        orgName: 'Apex Health Institute',
+        email: 'f.balogun@apexhealth.org',
+        phone: '+234 812 777 4031',
+        orgType: 'Professional Accreditation',
+        deliveryMethod: 'Zoom links & Telegram channels',
+        hasExistingLms: 'Yes, basic WordPress LMS that crashes regularly',
+        coreProblem: 'Need anti-tamper verification QR certificates for CPD medical units.',
+        expectedLearners: '2,000+',
+        courseFormat: 'Self-paced video modules + strict timed proctored quizzes',
+        budget: '$5,000 - $12,000',
+        timeline: 'Within 2 months',
+        preferredChannel: 'WhatsApp call',
+        date: '2026-11-06',
+        time: '10:30 WAT',
+        status: 'New enquiry',
+        notes: 'High compliance requirement.'
+      }
+    ];
+  });
+
+  // Admin Configurable Stats state
+  const [siteStats, setSiteStats] = useState({
+    platformsBuilt: '100+',
+    avgRating: '4.9/5',
+    organisations: '60+',
+    satisfactionRate: '98%',
+    isConfigurablePreview: true
+  });
+
+  // Consultation Form state (20 fields)
+  const [formData, setFormData] = useState({
+    fullName: '',
+    orgName: '',
+    email: '',
+    phone: '',
+    orgType: 'Training Organisation / Institute',
+    currentMethod: 'WhatsApp, Telegram & Manual Emailing',
+    hasWebsiteOrLms: 'No existing LMS',
+    coreProblem: '',
+    requiredFeatures: ['Course Management', 'Paystack/Online Payments', 'Automated Certificates', 'Progress Tracking'],
+    expectedLearners: '100 - 500',
+    courseFormat: 'Hybrid (Live & Recorded)',
+    needsCustomBranding: 'Yes, full custom domain, logo & brand colors',
+    domainPreference: '',
+    budgetRange: 'NGN 2.5M - 5M ($1,800 - $3,500)',
+    projectTimeline: '4 - 6 weeks',
+    isDecisionMaker: 'Yes, primary decision-maker',
+    consultationDate: '',
+    consultationTime: '',
+    consultationMethod: 'Google Meet',
+    additionalDetails: ''
+  });
+
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [formSuccess, setFormSuccess] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
+
+  useEffect(() => {
+    localStorage.setItem('arete_lms_leads', JSON.stringify(leads));
+  }, [leads]);
+
+  // Navigate helper
+  const navigateTo = (tab) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Feature categories
+  const featureList = [
+    {
+      category: 'Course Delivery & Content',
+      icon: <BookOpen className="w-5 h-5 text-blue-600" />,
+      items: [
+        { title: 'Multimedia Course Builder', desc: 'Host video lessons, downloadable slide decks, audio podcasts, and rich text guides.' },
+        { title: 'Live Class Integration', desc: 'Embed scheduled Zoom, Google Meet, or Microsoft Teams live rooms right inside the learner portal.' },
+        { title: 'Drip Content Scheduling', desc: 'Release modules progressively day-by-day or week-by-week to ensure consistent learner retention.' },
+        { title: 'Mobile-Optimised Web & PWA', desc: 'Blazing fast mobile experiences for learners across smartphones on low-bandwidth networks.' }
+      ]
+    },
+    {
+      category: 'Monetisation & Enrolment',
+      icon: <CreditCard className="w-5 h-5 text-emerald-600" />,
+      items: [
+        { title: 'Paystack, Flutterwave & Stripe', desc: 'Accept direct Naira debit cards, bank transfers, USSD, and international USD/GBP credit cards.' },
+        { title: 'Instalment & Coupon Engine', desc: 'Offer cohort early-bird coupons, corporate voucher codes, and flexible split payments.' },
+        { title: 'Automated Instant Onboarding', desc: 'Instant student account provisioning, receipt generation, and course enrolment on payment.' },
+        { title: 'Corporate Cohort Invoicing', desc: 'Bulk enterprise seats management for B2B corporate sponsors and training directors.' }
+      ]
+    },
+    {
+      category: 'Assessments & Credentials',
+      icon: <Award className="w-5 h-5 text-indigo-600" />,
+      items: [
+        { title: 'Interactive Quizzes & Banks', desc: 'Timed multiple-choice, essay questions, auto-grading, and randomized question pools.' },
+        { title: 'Assignment Submission Workflows', desc: 'Learners upload PDF/file deliverables; instructors evaluate with custom rubrics and feedback.' },
+        { title: 'Verifiable Digital Certificates', desc: 'Tamper-proof digital certificates with unique verification IDs and scan-ready QR codes.' },
+        { title: 'Milestone Progress Tracking', desc: 'Real-time completion percentage metrics displayed to both students and training monitors.' }
+      ]
+    },
+    {
+      category: 'Administration & Intelligence',
+      icon: <BarChart3 className="w-5 h-5 text-purple-600" />,
+      items: [
+        { title: 'Multi-Role Permissions', desc: 'Dedicated role-based portals for Platform Super Admins, Instructors, TAs, and Students.' },
+        { title: 'Granular Analytics Dashboards', desc: 'Track retention drop-offs, quiz averages, course revenue, and active learner login velocity.' },
+        { title: 'Automated WhatsApp & Email Alerts', desc: 'Send class reminders, quiz completion notices, and congratulatory certificate alerts.' },
+        { title: 'Custom Domain & Full White-Label', desc: 'Operate on your private domain (e.g., learn.yourinstitute.org) with zero 3rd-party vendor badges.' }
+      ]
+    }
+  ];
+
+  // Handle consultation form changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: null }));
+    }
+  };
+
+  const handleFeatureToggle = (feature) => {
+    setFormData(prev => {
+      const exists = prev.requiredFeatures.includes(feature);
+      return {
+        ...prev,
+        requiredFeatures: exists
+          ? prev.requiredFeatures.filter(f => f !== feature)
+          : [...prev.requiredFeatures, feature]
+      };
+    });
+  };
+
+  const handleConsultationSubmit = (e) => {
+    e.preventDefault();
+    const errors = {};
+    if (!formData.fullName.trim()) errors.fullName = 'Please enter your full name';
+    if (!formData.orgName.trim()) errors.orgName = 'Organisation name is required';
+    if (!formData.email.trim() || !formData.email.includes('@')) errors.email = 'A valid business email address is required';
+    if (!formData.phone.trim()) errors.phone = 'Phone / WhatsApp number is required';
+    if (!formData.coreProblem.trim()) errors.coreProblem = 'Please describe the main challenge you want your LMS to solve';
+    if (!formData.consultationDate) errors.consultationDate = 'Please select a preferred date';
+    if (!formData.consultationTime) errors.consultationTime = 'Please select a preferred time';
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      const firstErrorKey = Object.keys(errors)[0];
+      const el = document.getElementsByName(firstErrorKey)[0];
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    setFormSubmitting(true);
+    setTimeout(() => {
+      const newLead = {
+        id: `LEAD-${Math.floor(1000 + Math.random() * 9000)}`,
+        name: formData.fullName,
+        orgName: formData.orgName,
+        email: formData.email,
+        phone: formData.phone,
+        orgType: formData.orgType,
+        deliveryMethod: formData.currentMethod,
+        hasExistingLms: formData.hasWebsiteOrLms,
+        coreProblem: formData.coreProblem,
+        expectedLearners: formData.expectedLearners,
+        courseFormat: formData.courseFormat,
+        budget: formData.budgetRange,
+        timeline: formData.projectTimeline,
+        preferredChannel: formData.consultationMethod,
+        date: formData.consultationDate,
+        time: formData.consultationTime,
+        status: 'New enquiry',
+        notes: `Features: ${formData.requiredFeatures.join(', ')}. Details: ${formData.additionalDetails || 'None provided'}`
+      };
+
+      setLeads(prev => [newLead, ...prev]);
+      setFormSubmitting(false);
+      setFormSuccess(newLead.id);
+    }, 900);
+  };
+
+  // Sample Quiz Question
+  const quizQuestions = [
+    {
+      q: 'Which protocol ensures automated verification of issued learner certificates without central server downtime?',
+      options: [
+        'A. Storing certificates on personal WhatsApp threads',
+        'B. Cryptographic unique hashes with public QR validation URLs',
+        'C. Sending static unverified JPEG attachments via email',
+        'D. Asking students to print paper receipts'
+      ],
+      correct: 1
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col selection:bg-blue-600 selection:text-white">
+      {/* Top Banner Notice */}
+      <div className="bg-[#0B132B] text-slate-300 text-xs py-2 px-4 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center space-x-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              Nigeria & Global
+            </span>
+            <span className="text-slate-300">
+              Arete Academia Custom LMS Engineering: <span className="text-white font-medium">Moving You Forward</span>
+            </span>
+          </div>
+          <div className="flex items-center space-x-4 text-slate-400">
+            <button
+              onClick={() => setAdminModalOpen(true)}
+              className="hover:text-blue-400 flex items-center space-x-1 transition-colors"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Admin Leads Portal ({leads.length})</span>
+            </button>
+            <a
+              href="https://www.areteacademia.org"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-white flex items-center space-x-1"
+            >
+              <span>areteacademia.org</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Sticky Header */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          {/* Brand Logo */}
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigateTo('home')}>
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0B132B] via-[#1C2541] to-blue-700 flex items-center justify-center text-white font-black text-xl shadow-md shadow-blue-900/20">
+              A
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xl font-bold tracking-tight text-[#0B132B]">Arete Academia</span>
+                <span className="hidden sm:inline-block text-[10px] uppercase tracking-wider font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                  LMS Solutions
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 tracking-wide font-medium">Moving You Forward</p>
+            </div>
+          </div>
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center space-x-7 text-sm font-medium text-slate-600">
+            <button
+              onClick={() => navigateTo('home')}
+              className={`hover:text-blue-600 transition-colors ${activeTab === 'home' ? 'text-blue-600 font-semibold' : ''}`}
+            >
+              Home
+            </button>
+            <button
+              onClick={() => navigateTo('solutions')}
+              className={`hover:text-blue-600 transition-colors ${activeTab === 'solutions' ? 'text-blue-600 font-semibold' : ''}`}
+            >
+              LMS Solutions
+            </button>
+            <button
+              onClick={() => navigateTo('features')}
+              className={`hover:text-blue-600 transition-colors ${activeTab === 'features' ? 'text-blue-600 font-semibold' : ''}`}
+            >
+              Features
+            </button>
+            <button
+              onClick={() => navigateTo('demo')}
+              className={`hover:text-blue-600 flex items-center space-x-1.5 transition-colors ${activeTab === 'demo' ? 'text-blue-600 font-semibold' : ''}`}
+            >
+              <span>Interactive Sandbox</span>
+              <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">Live</span>
+            </button>
+            <button
+              onClick={() => navigateTo('process')}
+              className={`hover:text-blue-600 transition-colors ${activeTab === 'process' ? 'text-blue-600 font-semibold' : ''}`}
+            >
+              How It Works
+            </button>
+            <button
+              onClick={() => navigateTo('cases')}
+              className={`hover:text-blue-600 transition-colors ${activeTab === 'cases' ? 'text-blue-600 font-semibold' : ''}`}
+            >
+              Case Studies
+            </button>
+            <button
+              onClick={() => navigateTo('faq')}
+              className={`hover:text-blue-600 transition-colors ${activeTab === 'faq' ? 'text-blue-600 font-semibold' : ''}`}
+            >
+              FAQs
+            </button>
+          </nav>
+
+          {/* CTA Buttons */}
+          <div className="hidden sm:flex items-center space-x-3">
+            <button
+              onClick={() => navigateTo('demo')}
+              className="text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2.5 rounded-lg border border-slate-300 transition-colors"
+            >
+              Explore Sandbox
+            </button>
+            <button
+              onClick={() => navigateTo('consultation')}
+              className="text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] px-4 py-2.5 rounded-lg shadow-sm shadow-blue-600/30 transition-all flex items-center space-x-1.5"
+            >
+              <span>Book a Free Consultation</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-6 space-y-3 shadow-xl">
+            <div className="grid grid-cols-2 gap-2 pb-3 border-b border-slate-100">
+              <button
+                onClick={() => navigateTo('home')}
+                className="text-left py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-50 text-slate-700"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => navigateTo('solutions')}
+                className="text-left py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-50 text-slate-700"
+              >
+                LMS Solutions
+              </button>
+              <button
+                onClick={() => navigateTo('features')}
+                className="text-left py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-50 text-slate-700"
+              >
+                Features
+              </button>
+              <button
+                onClick={() => navigateTo('demo')}
+                className="text-left py-2 px-3 rounded-lg text-sm font-semibold text-blue-600 hover:bg-blue-50"
+              >
+                Interactive Demo ✨
+              </button>
+              <button
+                onClick={() => navigateTo('process')}
+                className="text-left py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-50 text-slate-700"
+              >
+                How It Works
+              </button>
+              <button
+                onClick={() => navigateTo('cases')}
+                className="text-left py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-50 text-slate-700"
+              >
+                Case Studies
+              </button>
+              <button
+                onClick={() => navigateTo('faq')}
+                className="text-left py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-50 text-slate-700"
+              >
+                FAQs
+              </button>
+            </div>
+            <div className="pt-2 flex flex-col space-y-2">
+              <button
+                onClick={() => navigateTo('consultation')}
+                className="w-full text-center py-3 rounded-lg bg-blue-600 text-white font-medium text-sm shadow-md"
+              >
+                Book a Free LMS Consultation
+              </button>
+              <button
+                onClick={() => { setAdminModalOpen(true); setMobileMenuOpen(false); }}
+                className="w-full text-center py-2.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium flex items-center justify-center space-x-1"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Admin Leads Console</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* MAIN VIEW CONTROLLER */}
+      <main className="flex-grow">
+        {activeTab === 'home' && (
+          <>
+            {/* HERO SECTION */}
+            <section className="relative overflow-hidden bg-gradient-to-b from-[#0B132B] via-[#1C2541] to-[#0B132B] text-white pt-16 pb-24 lg:pt-20 lg:pb-32">
+              {/* Background Glow Accents */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-blue-500/10 blur-[130px] rounded-full pointer-events-none" />
+              <div className="absolute -top-24 right-10 w-80 h-80 bg-purple-500/10 blur-[120px] rounded-full pointer-events-none" />
+
+              <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-12">
+                  <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-semibold mb-6">
+                    <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Your Knowledge. Your Brand. Your Learning Platform.</span>
+                  </div>
+
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15] mb-6">
+                    Your Own Branded Learning Platform{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300">
+                      Starts Here.
+                    </span>
+                  </h1>
+
+                  <p className="text-lg sm:text-xl text-slate-300 leading-relaxed mb-8">
+                    We build custom Learning Management Systems that empower training organisations, professional institutes,
+                    and education consultants to deliver courses, manage students, process payments, track progress, and scale
+                    their training operations seamlessly.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                    <button
+                      onClick={() => navigateTo('consultation')}
+                      className="w-full sm:w-auto px-8 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-base shadow-lg shadow-blue-600/40 hover:shadow-blue-500/50 transition-all flex items-center justify-center space-x-2"
+                    >
+                      <span>Book a Free LMS Consultation</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => navigateTo('demo')}
+                      className="w-full sm:w-auto px-7 py-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 font-semibold text-base transition-all flex items-center justify-center space-x-2"
+                    >
+                      <PlayCircle className="w-5 h-5 text-blue-400" />
+                      <span>Explore LMS Features</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-center space-x-2 text-xs text-slate-400">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Designed around your organisation, your learners, and your business goals.</span>
+                  </div>
+                </div>
+
+                {/* Hero Realistic LMS Mockup Preview (Interactive preview widget) */}
+                <div className="mt-8 rounded-2xl p-2 sm:p-4 bg-gradient-to-b from-slate-700/40 to-slate-900/60 border border-slate-700/60 shadow-2xl backdrop-blur-sm max-w-5xl mx-auto">
+                  <div className="bg-[#0f172a] rounded-xl border border-slate-800 overflow-hidden shadow-inner">
+                    {/* Fake Browser / App Top Header */}
+                    <div className="bg-[#1e293b] px-4 py-3 flex items-center justify-between border-b border-slate-800 text-xs">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex space-x-1.5">
+                          <div className="w-3 h-3 rounded-full bg-rose-500/80" />
+                          <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                          <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                        </div>
+                        <span className="text-slate-400 pl-3 font-mono text-[11px] hidden sm:inline">
+                          https://portal.executive-academy.org (Sample Branded LMS Deployment)
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold text-[11px]">
+                          Live Demo System
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* App Internal Mockup Body */}
+                    <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+                      {/* Left Mini Sidebar */}
+                      <div className="hidden lg:block space-y-4 border-r border-slate-800 pr-4">
+                        <div className="flex items-center space-x-3 pb-3 border-b border-slate-800">
+                          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white text-sm">
+                            EA
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-white">Executive Academy</p>
+                            <p className="text-[10px] text-slate-400">Pro Enterprise LMS</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1 text-xs text-slate-300">
+                          <div className="flex items-center space-x-2.5 px-3 py-2 rounded-lg bg-blue-600/20 text-blue-400 font-medium">
+                            <BarChart3 className="w-4 h-4" />
+                            <span>Overview Dashboard</span>
+                          </div>
+                          <div className="flex items-center space-x-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/60 text-slate-400">
+                            <BookOpen className="w-4 h-4" />
+                            <span>Courses & Modules</span>
+                          </div>
+                          <div className="flex items-center space-x-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/60 text-slate-400">
+                            <Users className="w-4 h-4" />
+                            <span>Learner Registry</span>
+                          </div>
+                          <div className="flex items-center space-x-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/60 text-slate-400">
+                            <Award className="w-4 h-4" />
+                            <span>Certificates Engine</span>
+                          </div>
+                          <div className="flex items-center space-x-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/60 text-slate-400">
+                            <CreditCard className="w-4 h-4" />
+                            <span>Paystack Transactions</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Center Dashboard Main */}
+                      <div className="lg:col-span-3 space-y-5">
+                        {/* Top KPI row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
+                            <p className="text-[11px] text-slate-400">Active Learners</p>
+                            <p className="text-xl font-bold text-white mt-1">1,482</p>
+                            <span className="text-[10px] text-emerald-400 font-medium">+18% this month</span>
+                          </div>
+                          <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
+                            <p className="text-[11px] text-slate-400">Published Courses</p>
+                            <p className="text-xl font-bold text-white mt-1">14</p>
+                            <span className="text-[10px] text-slate-400 font-medium">3 in draft</span>
+                          </div>
+                          <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
+                            <p className="text-[11px] text-slate-400">Avg Completion</p>
+                            <p className="text-xl font-bold text-white mt-1">87.4%</p>
+                            <span className="text-[10px] text-emerald-400 font-medium">High retention</span>
+                          </div>
+                          <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
+                            <p className="text-[11px] text-slate-400">Paystack Net Revenue</p>
+                            <p className="text-xl font-bold text-white mt-1">₦ 18.4M</p>
+                            <span className="text-[10px] text-blue-400 font-medium">Automated settlement</span>
+                          </div>
+                        </div>
+
+                        {/* Middle Action / Active Course Preview */}
+                        <div className="bg-slate-800/40 border border-slate-700/60 rounded-xl p-4">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-slate-700/60 gap-2">
+                            <div>
+                              <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
+                                Current Active Cohort
+                              </span>
+                              <h4 className="text-sm font-bold text-white">
+                                Diploma in Corporate Governance & Executive Leadership
+                              </h4>
+                            </div>
+                            <span className="text-xs bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-full font-medium">
+                              Cohort 04 (320 Enrolled)
+                            </span>
+                          </div>
+
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div className="bg-slate-900/50 p-2.5 rounded-lg border border-slate-800">
+                              <span className="text-slate-400 text-[10px] block">Next Live Zoom Class</span>
+                              <span className="text-slate-200 font-medium flex items-center gap-1 mt-1">
+                                <Video className="w-3 h-3 text-rose-400" />
+                                Thursday, 6:00 PM WAT
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/50 p-2.5 rounded-lg border border-slate-800">
+                              <span className="text-slate-400 text-[10px] block">Mid-Term Assessment</span>
+                              <span className="text-slate-200 font-medium flex items-center gap-1 mt-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                92% submissions graded
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/50 p-2.5 rounded-lg border border-slate-800">
+                              <span className="text-slate-400 text-[10px] block">Verified Certificates</span>
+                              <span className="text-slate-200 font-medium flex items-center gap-1 mt-1">
+                                <Award className="w-3 h-3 text-amber-400" />
+                                Auto QR Ready
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-center text-[11px] text-slate-400 mt-2 font-mono">
+                    * Interactive demonstration representation with sample data metrics. Functionality is customized per client scope.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* TRUST & CREDIBILITY METRICS (Configurable) */}
+            <section className="bg-white border-b border-slate-200 py-10">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
+                    <p className="text-3xl sm:text-4xl font-extrabold text-[#0B132B] tracking-tight">{siteStats.platformsBuilt}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-700 mt-1">LMS Platform Deployments</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Engineered across Nigeria & diaspora</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
+                    <p className="text-3xl sm:text-4xl font-extrabold text-blue-600 tracking-tight">{siteStats.avgRating}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-700 mt-1">Average Client Rating</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Based on delivered bespoke portals</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
+                    <p className="text-3xl sm:text-4xl font-extrabold text-[#0B132B] tracking-tight">{siteStats.organisations}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-700 mt-1">Institutes & Consultancies</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Moved from WhatsApp to custom systems</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
+                    <p className="text-3xl sm:text-4xl font-extrabold text-emerald-600 tracking-tight">{siteStats.satisfactionRate}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-700 mt-1">Client Satisfaction</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Supported with hands-on staff training</p>
+                  </div>
+                </div>
+                <div className="text-center mt-3">
+                  <p className="text-[11px] text-slate-400">
+                    Metrics represent architectural capability and portfolio targets. Custom quotes provided upon formal consultation.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* PROBLEM VS SOLUTION SECTION */}
+            <section className="py-20 bg-slate-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                    The Modern Training Bottleneck
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-black text-[#0B132B] mt-3">
+                    Is Your Training Business Ready to Grow Beyond Manual Delivery?
+                  </h2>
+                  <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed">
+                    Most educators and executive institutes start with WhatsApp groups, Telegram chats, manual email blasts,
+                    and spreadsheets. But as student numbers climb, the cracks begin to show.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+                  {/* Pain Points Card */}
+                  <div className="bg-rose-50/60 border border-rose-200 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm">
+                    <div>
+                      <div className="flex items-center space-x-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
+                          <X className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-rose-950">Manual Delivery Chaos</h3>
+                          <p className="text-xs text-rose-700">The daily operational nightmare of disconnected tools</p>
+                        </div>
+                      </div>
+
+                      <ul className="space-y-4 text-sm text-slate-700">
+                        <li className="flex items-start space-x-3">
+                          <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                          <span><strong>WhatsApp Group Clutter:</strong> Crucial learning materials, PDFs, and Zoom links get buried beneath hundreds of unrelated chat messages.</span>
+                        </li>
+                        <li className="flex items-start space-x-3">
+                          <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                          <span><strong>Payment Verification Headaches:</strong> Staff spend hours manually matching bank receipts, reconciling transfers, and manually granting drive access.</span>
+                        </li>
+                        <li className="flex items-start space-x-3">
+                          <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                          <span><strong>Zero Completion Analytics:</strong> You have no idea which students actually watched the videos or where drop-offs occur before examinations.</span>
+                        </li>
+                        <li className="flex items-start space-x-3">
+                          <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                          <span><strong>Manual Certificate Forgery Risk:</strong> Distributing editable PDFs that are easily fabricated with no tamper-proof online verification link.</span>
+                        </li>
+                        <li className="flex items-start space-x-3">
+                          <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                          <span><strong>Low Perceived Brand Value:</strong> Corporate buyers and international participants hesitate to pay premium fees for informal chat classes.</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="mt-8 pt-4 border-t border-rose-200/60 text-xs font-semibold text-rose-800">
+                      Result: High administrator fatigue, lost revenue, and constrained growth.
+                    </div>
+                  </div>
+
+                  {/* Solution Card */}
+                  <div className="bg-white border-2 border-blue-600/30 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-lg shadow-blue-900/5 relative">
+                    <div className="absolute -top-3 right-6 bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                      The Arete Academia Solution
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                          <Check className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-[#0B132B]">One Platform. Absolute Organisation.</h3>
+                          <p className="text-xs text-blue-600 font-medium">Your own white-label LMS engineered for scale</p>
+                        </div>
+                      </div>
+
+                      <ul className="space-y-4 text-sm text-slate-700">
+                        <li className="flex items-start space-x-3">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span><strong>Branded Centralised Learning Portal:</strong> A dedicated portal under your domain with structured video modules, resources, and live class links.</span>
+                        </li>
+                        <li className="flex items-start space-x-3">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span><strong>Automated Paystack & Global Payments:</strong> Learners pay online in NGN, USD, or GBP and receive instant automated login credentials and course enrolment.</span>
+                        </li>
+                        <li className="flex items-start space-x-3">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span><strong>Real-Time Learner Progress Gauges:</strong> Real-time oversight over video completion %, quiz performance scores, and class attendance logs.</span>
+                        </li>
+                        <li className="flex items-start space-x-3">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span><strong>Tamper-Proof QR Certificates:</strong> Automatically issue secure digital certificates with unique verification IDs that corporate employers can scan.</span>
+                        </li>
+                        <li className="flex items-start space-x-3">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span><strong>Enterprise Authority:</strong> Position your institute as an industry-leading authority capable of landing high-ticket B2B training contracts.</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-blue-700">Result: Scalable operations with automated student management.</span>
+                      <button
+                        onClick={() => navigateTo('consultation')}
+                        className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        Start Plan <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* WHO WE SERVE SECTION */}
+            <section className="py-20 bg-white border-y border-slate-200">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                    Tailored LMS Architectures
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-black text-[#0B132B] mt-3">
+                    Who We Build Custom Learning Platforms For
+                  </h2>
+                  <p className="text-slate-600 text-base sm:text-lg mt-3">
+                    Whether you train 50 corporate executives or 5,000 self-paced students, we design workflows that fit your model.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[
+                    {
+                      icon: <GraduationCap className="w-6 h-6 text-blue-600" />,
+                      title: 'Professional Institutes & Academies',
+                      desc: 'Chartered institutes, healthcare councils, and accounting academies needing accredited multi-stage coursework, proctored examinations, and verified graduation credentials.'
+                    },
+                    {
+                      icon: <Briefcase className="w-6 h-6 text-indigo-600" />,
+                      title: 'Executive Education Consultants',
+                      desc: 'Consulting firms delivering high-ticket board and leadership masterclasses who require premium branded white-glove portals for senior executives.'
+                    },
+                    {
+                      icon: <Building className="w-6 h-6 text-emerald-600" />,
+                      title: 'Corporate Training Providers',
+                      desc: 'B2B training companies delivering compliance, customer service, and technical upskilling programmes to corporate organisations with cohort reporting.'
+                    },
+                    {
+                      icon: <Users className="w-6 h-6 text-purple-600" />,
+                      title: 'Coaches & Mentorship Businesses',
+                      desc: 'High-impact business and career coaches looking to transition from messy Telegram/WhatsApp broadcast channels into a recurring subscription academy.'
+                    },
+                    {
+                      icon: <Laptop className="w-6 h-6 text-sky-600" />,
+                      title: 'Tech & Vocational Bootcamps',
+                      desc: 'Coding bootcamps, UI/UX institutes, and vocational centres requiring assignment repositories, peer reviews, mentor grading dashboards, and project submissions.'
+                    },
+                    {
+                      icon: <BookOpen className="w-6 h-6 text-amber-600" />,
+                      title: 'Schools & Educational Entities',
+                      desc: 'K-12 preparatory colleges, continuous learning centres, and international foundations demanding secure parent-student communication and homework portals.'
+                    }
+                  ].map((card, idx) => (
+                    <div
+                      key={idx}
+                      className="p-6 rounded-2xl bg-slate-50 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all group"
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-white shadow-sm border border-slate-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        {card.icon}
+                      </div>
+                      <h3 className="text-lg font-bold text-[#0B132B] mb-2">{card.title}</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">{card.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-[#0B132B] to-[#1C2541] text-white flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div>
+                    <h4 className="text-lg font-bold">Unsure which architecture fits your business model?</h4>
+                    <p className="text-sm text-slate-300 mt-1">Our lead LMS solution architect will review your current delivery structure free of charge.</p>
+                  </div>
+                  <button
+                    onClick={() => navigateTo('consultation')}
+                    className="shrink-0 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-sm shadow-md transition-all"
+                  >
+                    Schedule Discovery Session
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {/* CALL TO DEMO TEASER */}
+            <section className="py-20 bg-slate-100">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-xl grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                      Live Interactive Sandbox
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl font-black text-[#0B132B] mt-4">
+                      Test-Drive the Learner & Admin Experience Right Now
+                    </h2>
+                    <p className="text-slate-600 text-base mt-4 leading-relaxed">
+                      Don't just take our word for it. Explore our working prototype sandbox featuring video modules,
+                      real-time module checklists, quiz scoring, dynamic certificate generator, and administrator reporting.
+                    </p>
+                    <div className="mt-6 space-y-3 text-sm text-slate-700">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Toggle between Student, Instructor, and Super Admin views.</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Interactive quiz assessment with instant grading.</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Live Certificate preview with verifiable QR code generator.</span>
+                      </div>
+                    </div>
+                    <div className="mt-8 flex flex-wrap gap-4">
+                      <button
+                        onClick={() => navigateTo('demo')}
+                        className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md flex items-center space-x-2"
+                      >
+                        <PlayCircle className="w-4 h-4" />
+                        <span>Launch Interactive Demo</span>
+                      </button>
+                      <button
+                        onClick={() => navigateTo('consultation')}
+                        className="px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm border border-slate-300"
+                      >
+                        Request Custom Scope
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Visual Preview Graphic */}
+                  <div className="relative">
+                    <div className="rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 shadow-2xl">
+                      <div className="bg-slate-900 rounded-xl p-5 text-white space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                          <span className="text-xs font-mono text-blue-400">DEMO_SANDBOX_ACTIVE</span>
+                          <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">All Personas Ready</span>
+                        </div>
+                        <div className="p-3 bg-slate-800/70 rounded-lg flex items-center justify-between">
+                          <div>
+                            <p className="text-xs font-bold text-slate-200">Executive Finance Mastery</p>
+                            <p className="text-[11px] text-slate-400">Module 3 of 6 • 85% Completed</p>
+                          </div>
+                          <span className="text-xs font-bold text-emerald-400">PASSED</span>
+                        </div>
+                        <div className="p-3 bg-slate-800/70 rounded-lg flex items-center justify-between">
+                          <div>
+                            <p className="text-xs font-bold text-slate-200">Certificate Hash Verification</p>
+                            <p className="text-[11px] font-mono text-slate-400">ID: ARTE-CERT-8841-X</p>
+                          </div>
+                          <Award className="w-5 h-5 text-amber-400" />
+                        </div>
+                        <div className="pt-2 text-center">
+                          <button
+                            onClick={() => navigateTo('demo')}
+                            className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-colors"
+                          >
+                            Click to Open Full Demo Screen
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* TESTIMONIALS & TRUST PROOF */}
+            <section className="py-20 bg-white">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                    Client Outcomes
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-black text-[#0B132B] mt-3">
+                    What Training Leaders Say
+                  </h2>
+                  <p className="text-slate-600 text-base mt-3">
+                    Discover how moving to a tailored, self-owned learning platform transforms course delivery and business revenue.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {[
+                    {
+                      name: 'Professor Chukwuma Eze',
+                      role: 'Director of Academic Programmes',
+                      org: 'Centre for West African Leadership (Lagos)',
+                      quote: 'Before Arete Academia engineered our LMS, our coordinators spent full weekends fielding frantic WhatsApp messages about Zoom links and sending out certificates one by one. Our students now onboard in under 60 seconds.',
+                      project: 'Executive LMS & Paystack Integration',
+                      rating: 5
+                    },
+                    {
+                      name: 'Folashade Adeleke',
+                      role: 'Managing Consultant',
+                      org: 'Apex HR & Corporate Academy (Abuja)',
+                      quote: 'When pitching our compliance programmes to tier-1 banks in Nigeria, presenting a custom-branded portal with automated employee progress tracking gave us the institutional authority to win six-figure corporate contracts.',
+                      project: 'Enterprise B2B Training Portal',
+                      rating: 5
+                    },
+                    {
+                      name: 'Emeka Robinson',
+                      role: 'Founder & Head Coach',
+                      org: 'The Product Strategy Lab (Remote/London)',
+                      quote: 'We wanted an LMS tailored specifically to African payment rails with automated USD/NGN split payouts. Arete Academia delivered clean code, on time, with full administrative staff training.',
+                      project: 'Custom Course Academy & Quiz Engine',
+                      rating: 5
+                    }
+                  ].map((t, idx) => (
+                    <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <div className="flex items-center space-x-1 text-amber-400 mb-4">
+                          {[...Array(t.rating)].map((_, i) => (
+                            <span key={i} className="text-lg">★</span>
+                          ))}
+                        </div>
+                        <p className="text-slate-700 text-sm italic leading-relaxed mb-6">
+                          "{t.quote}"
+                        </p>
+                      </div>
+                      <div className="pt-4 border-t border-slate-200">
+                        <p className="font-bold text-sm text-[#0B132B]">{t.name}</p>
+                        <p className="text-xs text-blue-600 font-medium">{t.role}</p>
+                        <p className="text-xs text-slate-500">{t.org}</p>
+                        <span className="inline-block mt-2 text-[10px] font-semibold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">
+                          {t.project}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-8 text-center">
+                  <p className="text-xs text-slate-400">
+                    * Representative feedback from organisations supported during platform design and delivery consultations.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* PROCESS PREVIEW */}
+            <section className="py-20 bg-slate-50 border-t border-slate-200">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                    Transparent Engineering
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-black text-[#0B132B] mt-3">
+                    How We Build Your Learning Platform
+                  </h2>
+                  <p className="text-slate-600 text-base mt-3">
+                    A structured 5-step path from requirement discovery to your live launch.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {[
+                    { step: '01', title: 'Discovery Consultation', desc: 'We audit your student cohorts, delivery formats, payment rails, and business requirements.' },
+                    { step: '02', title: 'Architecture & Scope', desc: 'Define required features, learner user-flows, hosting infrastructure, and milestone schedules.' },
+                    { step: '03', title: 'Custom Engineering', desc: 'Bespoke UI/UX design, custom database setup, video hosting, and payment gateway configuration.' },
+                    { step: '04', title: 'Testing & Hardening', desc: 'Rigorous testing of mobile responsiveness, quiz scoring, certificate logic, and payment webhooks.' },
+                    { step: '05', title: 'Launch & Staff Training', desc: 'Domain cutover, course upload guidance, administrator onboarding, and ongoing support.' }
+                  ].map((p, idx) => (
+                    <div key={idx} className="bg-white rounded-xl p-5 border border-slate-200 relative shadow-sm">
+                      <span className="text-2xl font-black text-blue-600/30 block mb-2">{p.step}</span>
+                      <h4 className="text-base font-bold text-[#0B132B] mb-2">{p.title}</h4>
+                      <p className="text-xs text-slate-600 leading-relaxed">{p.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="text-center mt-12">
+                  <button
+                    onClick={() => navigateTo('process')}
+                    className="inline-flex items-center space-x-2 text-sm font-bold text-blue-600 hover:text-blue-800"
+                  >
+                    <span>Read comprehensive process details</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* LMS SOLUTIONS PAGE */}
+        {activeTab === 'solutions' && (
+          <div className="py-16 bg-slate-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-3xl mx-auto mb-16">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                  Custom LMS Architectural Pathways
+                </span>
+                <h1 className="text-4xl font-black text-[#0B132B] mt-3">
+                  Tailored LMS Engineering For Every Stage of Growth
+                </h1>
+                <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed">
+                  We don't force a one-size-fits-all script. Arete Academia advises and engineers the precise architecture that fits your budget, technical proficiency, and student volume.
+                </p>
+              </div>
+
+              {/* Three Tier Architecture Overview */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+                {/* Pathway 1 */}
+                <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="inline-block px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-md mb-4">
+                      Pathway A
+                    </div>
+                    <h3 className="text-xl font-bold text-[#0B132B]">Branded Learning Platform</h3>
+                    <p className="text-xs text-blue-600 font-semibold mb-4">Rapid Launch for Independent Educators</p>
+                    <p className="text-sm text-slate-600 leading-relaxed mb-6">
+                      Ideal for training consultants and coaches who need to transition quickly away from manual WhatsApp delivery without excessive engineering overhead.
+                    </p>
+                    <div className="space-y-3 text-xs text-slate-700 pb-6 border-b border-slate-100">
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Custom domain & custom logos</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Paystack & card payment checkouts</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Video hosting & downloadable resources</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Automated student welcome emails</div>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <p className="text-xs font-semibold text-slate-500 mb-3">Typical Timeline: 2 - 3 Weeks</p>
+                    <button
+                      onClick={() => navigateTo('consultation')}
+                      className="w-full py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors"
+                    >
+                      Enquire for Branded Tier
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pathway 2 (Popular) */}
+                <div className="bg-white rounded-2xl p-8 border-2 border-blue-600 shadow-xl relative flex flex-col justify-between">
+                  <div className="absolute -top-3.5 right-6 bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Most Popular Choice
+                  </div>
+                  <div>
+                    <div className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-md mb-4">
+                      Pathway B
+                    </div>
+                    <h3 className="text-xl font-bold text-[#0B132B]">Professional Custom LMS</h3>
+                    <p className="text-xs text-blue-600 font-semibold mb-4">For Institutes & Growing Academies</p>
+                    <p className="text-sm text-slate-600 leading-relaxed mb-6">
+                      Designed for professional training institutes and executive programmes requiring automated certificates, quizzes, instructor roles, and cohort management.
+                    </p>
+                    <div className="space-y-3 text-xs text-slate-700 pb-6 border-b border-slate-100">
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Everything in Pathway A</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Tamper-proof QR digital certificates</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Timed quizzes, question banks & grading</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Assignment submission & grading portal</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Instructor & TA dashboard permissions</div>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <p className="text-xs font-semibold text-slate-500 mb-3">Typical Timeline: 4 - 6 Weeks</p>
+                    <button
+                      onClick={() => navigateTo('consultation')}
+                      className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition-colors"
+                    >
+                      Enquire for Professional LMS
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pathway 3 */}
+                <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="inline-block px-3 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-md mb-4">
+                      Pathway C
+                    </div>
+                    <h3 className="text-xl font-bold text-[#0B132B]">Enterprise Custom LMS</h3>
+                    <p className="text-xs text-purple-600 font-semibold mb-4">For Corporate Providers & Multi-Campus</p>
+                    <p className="text-sm text-slate-600 leading-relaxed mb-6">
+                      Full custom software architecture built from the ground up for high concurrency, multi-tenant corporate client portals, advanced integrations, and custom database APIs.
+                    </p>
+                    <div className="space-y-3 text-xs text-slate-700 pb-6 border-b border-slate-100">
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Multi-tenant B2B corporate team portals</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Custom ERP, CRM, & HRIS API integrations</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Dedicated high-security cloud database</div>
+                      <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600" /> Single Sign-On (SSO) & advanced proctoring</div>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <p className="text-xs font-semibold text-slate-500 mb-3">Typical Timeline: 6 - 12 Weeks</p>
+                    <button
+                      onClick={() => navigateTo('consultation')}
+                      className="w-full py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors"
+                    >
+                      Enquire for Enterprise Scope
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hosting, Maintenance & Domain Infrastructure */}
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+                <h3 className="text-xl font-bold text-[#0B132B] mb-6">Infrastructure, Hosting & Ownership</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-slate-700">
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <h4 className="font-bold text-[#0B132B] mb-2 flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-blue-600" />
+                      100% Data & Platform Ownership
+                    </h4>
+                    <p className="text-xs text-slate-600">
+                      You own your student database, course content, and customer records. No proprietary lock-in.
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <h4 className="font-bold text-[#0B132B] mb-2 flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-emerald-600" />
+                      Zero Per-Student Commission Fees
+                    </h4>
+                    <p className="text-xs text-slate-600">
+                      Unlike generic SaaS platforms that take 10% of every course sale, your earnings deposit directly into your business bank accounts.
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <h4 className="font-bold text-[#0B132B] mb-2 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-purple-600" />
+                      Managed Support & Updates
+                    </h4>
+                    <p className="text-xs text-slate-600">
+                      We offer ongoing maintenance packages including automated cloud backups, security patching, and technical staff support.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LMS FEATURES MATRIX */}
+        {activeTab === 'features' && (
+          <div className="py-16 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-3xl mx-auto mb-16">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                  14+ Core Engineering Modules
+                </span>
+                <h1 className="text-4xl font-black text-[#0B132B] mt-3">
+                  Comprehensive LMS Capabilities Built For African & Global Scale
+                </h1>
+                <p className="text-slate-600 text-base sm:text-lg mt-4">
+                  Each feature is modularly activated and custom-styled to align with your organisation's brand identity.
+                </p>
+              </div>
+
+              <div className="space-y-12">
+                {featureList.map((cat, idx) => (
+                  <div key={idx} className="bg-slate-50 rounded-2xl p-6 sm:p-8 border border-slate-200">
+                    <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-200">
+                      <div className="p-2 rounded-lg bg-white shadow-sm border border-slate-200">
+                        {cat.icon}
+                      </div>
+                      <h3 className="text-xl font-bold text-[#0B132B]">{cat.category}</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {cat.items.map((item, i) => (
+                        <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                          <div>
+                            <h4 className="text-base font-bold text-[#0B132B] mb-2">{item.title}</h4>
+                            <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
+                          </div>
+                          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-blue-600 font-semibold">
+                            <span>Modular Feature</span>
+                            <Check className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Consultation CTA Banner */}
+              <div className="mt-16 text-center bg-blue-50 border border-blue-200 rounded-2xl p-8 max-w-4xl mx-auto">
+                <h3 className="text-xl font-bold text-[#0B132B]">Need specific integrations not listed here?</h3>
+                <p className="text-sm text-slate-600 mt-2 max-w-xl mx-auto">
+                  We frequently build custom integrations for local SMS gateways, WhatsApp Business APIs, bespoke payroll systems, and existing company websites.
+                </p>
+                <button
+                  onClick={() => navigateTo('consultation')}
+                  className="mt-6 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md"
+                >
+                  Discuss Your Integration Requirements
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* INTERACTIVE LMS SANDBOX / DEMO EXPERIENCE */}
+        {activeTab === 'demo' && (
+          <div className="py-12 bg-slate-900 text-white min-h-[85vh]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Sandbox Top Control Bar */}
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-6 border-b border-slate-800 gap-4">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold">
+                      Interactive Prototype Sandbox
+                    </span>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-black mt-1">Explore Live Platform Architecture</h1>
+                  <p className="text-xs text-slate-400">
+                    Switch between roles below to inspect how students, instructors, and administrators experience the system.
+                  </p>
+                </div>
+
+                {/* Persona Switcher Tabs */}
+                <div className="bg-slate-800 p-1.5 rounded-xl border border-slate-700 flex space-x-1">
+                  <button
+                    onClick={() => setDemoPersona('student')}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                      demoPersona === 'student' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <GraduationCap className="w-4 h-4" />
+                    <span>Student / Learner View</span>
+                  </button>
+                  <button
+                    onClick={() => setDemoPersona('instructor')}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                      demoPersona === 'instructor' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Laptop className="w-4 h-4" />
+                    <span>Instructor View</span>
+                  </button>
+                  <button
+                    onClick={() => setDemoPersona('admin')}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                      demoPersona === 'admin' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    <span>Admin Overview</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* DEMO PERSONA: STUDENT VIEW */}
+              {demoPersona === 'student' && (
+                <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  {/* Left Column: Lesson Player & Interactive Modules */}
+                  <div className="lg:col-span-8 space-y-6">
+                    {/* Simulated Video Player */}
+                    <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+                      <div className="relative aspect-video bg-gradient-to-br from-slate-900 to-slate-950 flex flex-col items-center justify-center p-6 text-center border-b border-slate-800">
+                        <div className="w-16 h-16 rounded-full bg-blue-600/90 text-white flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 transition-transform mb-3">
+                          <PlayCircle className="w-9 h-9" />
+                        </div>
+                        <span className="text-xs uppercase font-bold text-blue-400 tracking-wider">
+                          Module 2 • Lesson 3 (Video Lesson)
+                        </span>
+                        <h3 className="text-lg font-bold text-white max-w-md mt-1">
+                          Strategic Governance & Executive Risk Management in West Africa
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-2 font-mono">
+                          Duration: 24 mins • Quality: 1080p Auto-Bandwidth Adaptive
+                        </p>
+
+                        {/* Video Controls Bar Mockup */}
+                        <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-slate-400 bg-slate-900/80 px-4 py-2 rounded-lg backdrop-blur-sm">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-emerald-400 font-mono text-[11px]">18:42 / 24:10</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <span className="text-[11px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">1.25x</span>
+                            <span className="text-[11px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">HD 720p</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Lesson Actions */}
+                      <div className="p-4 bg-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div className="flex items-center space-x-2 text-xs text-slate-300">
+                          <Download className="w-4 h-4 text-blue-400" />
+                          <span>Resources: <strong>Executive_Board_Charter.pdf (2.4MB)</strong></span>
+                        </div>
+                        <div className="flex items-center space-x-2 w-full sm:w-auto">
+                          <button
+                            onClick={() => {
+                              if (!demoCompletedLessons.includes('m2-l3')) {
+                                setDemoCompletedLessons([...demoCompletedLessons, 'm2-l3']);
+                              }
+                            }}
+                            className={`w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors ${
+                              demoCompletedLessons.includes('m2-l3')
+                                ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/40'
+                                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                            }`}
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{demoCompletedLessons.includes('m2-l3') ? 'Lesson Completed' : 'Mark as Complete'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interactive Quiz Sandbox */}
+                    <div className="bg-slate-800/80 rounded-2xl p-6 border border-slate-700">
+                      <div className="flex items-center justify-between pb-4 border-b border-slate-700">
+                        <div className="flex items-center space-x-2">
+                          <HelpCircle className="w-5 h-5 text-indigo-400" />
+                          <h4 className="text-base font-bold text-white">Interactive Assessment Checkpoint</h4>
+                        </div>
+                        <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-mono">
+                          Auto-Grading Logic Demo
+                        </span>
+                      </div>
+
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-slate-200 mb-4">
+                          {quizQuestions[activeQuizQuestion].q}
+                        </p>
+
+                        <div className="space-y-2">
+                          {quizQuestions[activeQuizQuestion].options.map((opt, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setQuizSelectedOption(i)}
+                              className={`w-full text-left p-3 rounded-xl text-xs font-medium border transition-all ${
+                                quizSelectedOption === i
+                                  ? 'bg-blue-600/30 border-blue-500 text-white'
+                                  : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/40'
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="mt-5 flex items-center justify-between">
+                          <button
+                            onClick={() => {
+                              if (quizSelectedOption === null) return;
+                              if (quizSelectedOption === quizQuestions[activeQuizQuestion].correct) {
+                                setQuizScore('pass');
+                              } else {
+                                setQuizScore('fail');
+                              }
+                            }}
+                            disabled={quizSelectedOption === null}
+                            className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold"
+                          >
+                            Submit Answer For Grading
+                          </button>
+
+                          {quizScore === 'pass' && (
+                            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                              <CheckCircle2 className="w-4 h-4" /> 100% Correct! Milestone Achieved.
+                            </span>
+                          )}
+                          {quizScore === 'fail' && (
+                            <span className="text-xs font-bold text-rose-400 flex items-center gap-1">
+                              <AlertCircle className="w-4 h-4" /> Incorrect. Try selecting Option B!
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Progress & Modules Checklist */}
+                  <div className="lg:col-span-4 space-y-6">
+                    {/* Student Profile Card */}
+                    <div className="bg-slate-800/80 rounded-2xl p-5 border border-slate-700">
+                      <div className="flex items-center space-x-3 pb-4 border-b border-slate-700">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-lg text-white">
+                          TO
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">Toluwani Olatunji</p>
+                          <p className="text-xs text-slate-400">ID: STU-2026-9042</p>
+                          <span className="inline-block mt-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-semibold">
+                            Enrolled • Tuition Paid via Paystack
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Overall Progress Gauge */}
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between text-xs mb-1.5">
+                          <span className="text-slate-400">Course Completion Rate</span>
+                          <span className="text-emerald-400 font-bold font-mono">
+                            {Math.round((demoCompletedLessons.length / 4) * 100)}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-500"
+                            style={{ width: `${(demoCompletedLessons.length / 4) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Certificate Trigger Button */}
+                      <div className="mt-5 pt-4 border-t border-slate-700/60">
+                        <button
+                          onClick={() => setShowCertificateModal(true)}
+                          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-amber-600/20 transition-all"
+                        >
+                          <Award className="w-4 h-4 text-slate-950" />
+                          <span>View Sample Verified Certificate</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Course Curriculum Checklist */}
+                    <div className="bg-slate-800/80 rounded-2xl p-5 border border-slate-700 space-y-3">
+                      <h4 className="text-xs uppercase font-bold text-slate-400 tracking-wider">
+                        Curriculum Progress Checklist
+                      </h4>
+
+                      {[
+                        { id: 'm1-l1', title: '1. Introduction to Executive Leadership', time: '14 mins' },
+                        { id: 'm1-l2', title: '2. Board Audit & Fiduciary Controls', time: '20 mins' },
+                        { id: 'm2-l3', title: '3. Strategic Risk Management (Active)', time: '24 mins' },
+                        { id: 'm2-l4', title: '4. Capstone Case Assessment & Exam', time: '45 mins' }
+                      ].map((item) => {
+                        const isDone = demoCompletedLessons.includes(item.id);
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => {
+                              if (isDone) {
+                                setDemoCompletedLessons(demoCompletedLessons.filter(x => x !== item.id));
+                              } else {
+                                setDemoCompletedLessons([...demoCompletedLessons, item.id]);
+                              }
+                            }}
+                            className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between text-xs ${
+                              isDone
+                                ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
+                                : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/40'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2.5">
+                              {isDone ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                              ) : (
+                                <div className="w-4 h-4 rounded-full border border-slate-600 shrink-0" />
+                              )}
+                              <span className="font-medium">{item.title}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-mono">{item.time}</span>
+                          </div>
+                        );
+                      })}
+                      <p className="text-[11px] text-slate-400 pt-1 text-center">
+                        * Click any lesson above to simulate instant progress recalculation.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* DEMO PERSONA: INSTRUCTOR VIEW */}
+              {demoPersona === 'instructor' && (
+                <div className="mt-8 space-y-6">
+                  {/* Instructor KPI Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                      <span className="text-xs text-slate-400">Assigned Cohorts</span>
+                      <p className="text-2xl font-bold text-white mt-1">3 Active</p>
+                      <span className="text-[10px] text-blue-400">142 total enrolled students</span>
+                    </div>
+                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                      <span className="text-xs text-slate-400">Assignments Pending Review</span>
+                      <p className="text-2xl font-bold text-amber-400 mt-1">18 Submissions</p>
+                      <span className="text-[10px] text-slate-400">Requires grading rubric review</span>
+                    </div>
+                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                      <span className="text-xs text-slate-400">Next Scheduled Live Masterclass</span>
+                      <p className="text-base font-bold text-white mt-2 flex items-center gap-1.5">
+                        <Video className="w-4 h-4 text-rose-400" />
+                        Today, 7:00 PM WAT
+                      </p>
+                      <span className="text-[10px] text-emerald-400">Zoom credentials sync active</span>
+                    </div>
+                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                      <span className="text-xs text-slate-400">Cohort Average Quiz Score</span>
+                      <p className="text-2xl font-bold text-emerald-400 mt-1">84.2%</p>
+                      <span className="text-[10px] text-slate-400">Benchmark exceeded</span>
+                    </div>
+                  </div>
+
+                  {/* Instructor Grading Queue Table */}
+                  <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 overflow-x-auto">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-700 mb-4">
+                      <h3 className="text-sm font-bold text-white">Student Assignment Submissions (Sample Queue)</h3>
+                      <span className="text-xs text-slate-400">Updated 5 minutes ago</span>
+                    </div>
+
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="text-slate-400 border-b border-slate-700">
+                          <th className="pb-3 font-semibold">Student Name</th>
+                          <th className="pb-3 font-semibold">Course Module</th>
+                          <th className="pb-3 font-semibold">Submitted File</th>
+                          <th className="pb-3 font-semibold">Submission Date</th>
+                          <th className="pb-3 font-semibold">Status</th>
+                          <th className="pb-3 font-semibold text-right">Instructor Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-700/60 text-slate-200">
+                        <tr>
+                          <td className="py-3 font-medium">Bolanle Fashola</td>
+                          <td className="py-3">Executive Risk Assessment</td>
+                          <td className="py-3 font-mono text-blue-400">fashola_capstone_v2.pdf</td>
+                          <td className="py-3">Today, 11:20 AM</td>
+                          <td className="py-3"><span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Pending Grade</span></td>
+                          <td className="py-3 text-right">
+                            <button className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded font-semibold text-[11px]">
+                              Review & Grade
+                            </button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 font-medium">Ibrahim Danladi</td>
+                          <td className="py-3">Financial Ratio Modeling</td>
+                          <td className="py-3 font-mono text-blue-400">ibrahim_sheet_calc.xlsx</td>
+                          <td className="py-3">Yesterday</td>
+                          <td className="py-3"><span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Graded (94/100)</span></td>
+                          <td className="py-3 text-right">
+                            <button className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded font-semibold text-[11px]">
+                              Edit Feedback
+                            </button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 font-medium">Ngozi Okonkwo</td>
+                          <td className="py-3">Board Presentation Video</td>
+                          <td className="py-3 font-mono text-blue-400">loom_recording_ngozi.mp4</td>
+                          <td className="py-3">2 days ago</td>
+                          <td className="py-3"><span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Graded (88/100)</span></td>
+                          <td className="py-3 text-right">
+                            <button className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded font-semibold text-[11px]">
+                              Edit Feedback
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* DEMO PERSONA: ADMIN VIEW */}
+              {demoPersona === 'admin' && (
+                <div className="mt-8 space-y-6">
+                  {/* Top Stats */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                      <span className="text-xs text-slate-400">Total Enrolled Learners</span>
+                      <p className="text-2xl font-bold text-white mt-1">1,482</p>
+                      <span className="text-[10px] text-emerald-400">+124 this week</span>
+                    </div>
+                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                      <span className="text-xs text-slate-400">Total Tuition Collected</span>
+                      <p className="text-2xl font-bold text-white mt-1">₦ 42,650,000</p>
+                      <span className="text-[10px] text-blue-400">Paystack Direct Settlements</span>
+                    </div>
+                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                      <span className="text-xs text-slate-400">Certificates Dispatched</span>
+                      <p className="text-2xl font-bold text-amber-400 mt-1">891</p>
+                      <span className="text-[10px] text-slate-400">100% online QR verifiable</span>
+                    </div>
+                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                      <span className="text-xs text-slate-400">Server & Database Uptime</span>
+                      <p className="text-2xl font-bold text-emerald-400 mt-1">99.98%</p>
+                      <span className="text-[10px] text-slate-400">Supabase Postgres Cluster</span>
+                    </div>
+                  </div>
+
+                  {/* Search and Filters */}
+                  <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <h3 className="text-sm font-bold text-white">Platform Learner Registry & Enrolment Control</h3>
+                      <div className="flex items-center space-x-2 w-full sm:w-auto">
+                        <div className="relative flex-grow sm:w-64">
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                          <input
+                            type="text"
+                            placeholder="Filter by student name or email..."
+                            value={adminSearchQuery}
+                            onChange={(e) => setAdminSearchQuery(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Registry Table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="text-slate-400 border-b border-slate-700">
+                            <th className="pb-3 font-semibold">Learner ID</th>
+                            <th className="pb-3 font-semibold">Full Name</th>
+                            <th className="pb-3 font-semibold">Course Enrolled</th>
+                            <th className="pb-3 font-semibold">Payment Status</th>
+                            <th className="pb-3 font-semibold">Progress</th>
+                            <th className="pb-3 font-semibold">Certificate</th>
+                            <th className="pb-3 font-semibold text-right">Admin Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-700/60 text-slate-200">
+                          {[
+                            { id: 'STU-101', name: 'Dr. Adeola Benson', course: 'Corporate Governance', pay: '₦250,000 (Paid)', progress: '100%', cert: 'Issued #8841', status: 'Graduated' },
+                            { id: 'STU-102', name: 'Kabiru Mohammed', course: 'Executive Risk Mgmt', pay: '₦180,000 (Paid)', progress: '75%', cert: 'Pending Exam', status: 'Active' },
+                            { id: 'STU-103', name: 'Grace Nnamdi', course: 'Fintech Leadership', pay: '$450 USD (Stripe)', progress: '40%', cert: 'In Progress', status: 'Active' },
+                            { id: 'STU-104', name: 'Tariq Al-Mansoor', course: 'Corporate Governance', pay: '₦250,000 (Paid)', progress: '100%', cert: 'Issued #8842', status: 'Graduated' }
+                          ]
+                            .filter(s => s.name.toLowerCase().includes(adminSearchQuery.toLowerCase()))
+                            .map((row, i) => (
+                              <tr key={i}>
+                                <td className="py-3 font-mono text-slate-400">{row.id}</td>
+                                <td className="py-3 font-bold text-white">{row.name}</td>
+                                <td className="py-3 text-slate-300">{row.course}</td>
+                                <td className="py-3 text-emerald-400 font-medium">{row.pay}</td>
+                                <td className="py-3">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                      <div className="h-full bg-blue-500" style={{ width: row.progress }} />
+                                    </div>
+                                    <span className="text-[11px] font-mono">{row.progress}</span>
+                                  </div>
+                                </td>
+                                <td className="py-3 font-mono text-amber-300">{row.cert}</td>
+                                <td className="py-3 text-right">
+                                  <button className="text-[11px] text-blue-400 hover:text-blue-300 font-semibold underline">
+                                    View Log
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom Custom Demo CTA */}
+              <div className="mt-12 p-8 rounded-2xl bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-purple-900/40 border border-blue-500/30 text-center">
+                <h3 className="text-xl font-bold text-white">Want a Platform Configured Exactly Like This For Your Organisation?</h3>
+                <p className="text-slate-300 text-sm max-w-2xl mx-auto mt-2">
+                  We customise the database fields, payment gateways, grading criteria, and domain branding to match your exact institutional model.
+                </p>
+                <div className="mt-6 flex flex-wrap justify-center gap-4">
+                  <button
+                    onClick={() => navigateTo('consultation')}
+                    className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30"
+                  >
+                    Request Your Custom LMS Specification
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* HOW THE PROCESS WORKS */}
+        {activeTab === 'process' && (
+          <div className="py-16 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-3xl mx-auto mb-16">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                  Engineering Lifecycle
+                </span>
+                <h1 className="text-4xl font-black text-[#0B132B] mt-3">
+                  Our Transparent 5-Step LMS Development Process
+                </h1>
+                <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed">
+                  Every training platform we deliver is planned methodically. We respect your delivery schedule and safeguard your learners' experience.
+                </p>
+              </div>
+
+              <div className="space-y-8 max-w-4xl mx-auto">
+                {[
+                  {
+                    step: 'Phase 01',
+                    title: 'Discovery & Educational Workflow Audit',
+                    duration: 'Days 1 - 5',
+                    desc: 'We conduct a structured deep dive into your training operations: How do your students enrol? Do you deliver live Zoom masterclasses, pre-recorded video lessons, or PDF case studies? We establish your preferred payment processors (Paystack, Flutterwave, Stripe) and domain hosting requirements.'
+                  },
+                  {
+                    step: 'Phase 02',
+                    title: 'Functional Specification & System Architecture',
+                    duration: 'Days 6 - 10',
+                    desc: 'We map out the exact database schema, learner user flows, instructor grading permissions, quiz logic, and certificate design. You receive a clear Project Scope Document with agreed milestones and transparent timelines.'
+                  },
+                  {
+                    step: 'Phase 03',
+                    title: 'Custom Engineering & White-Label Theming',
+                    duration: 'Weeks 2 - 5',
+                    desc: 'Our senior engineers construct your platform: responsive frontend code, PostgreSQL database, video CDN streaming pipelines, automated transactional emails, and payment webhooks. Your custom logos and brand typography are applied meticulously.'
+                  },
+                  {
+                    step: 'Phase 04',
+                    title: 'Rigorous Testing, Security & Sandbox QA',
+                    duration: 'Week 5 - 6',
+                    desc: 'We simulate real learner transactions: testing local bank card payments, mobile screen responsiveness across iOS and Android, quiz submission scoring, and certificate tamper-proof QR validation links.'
+                  },
+                  {
+                    step: 'Phase 05',
+                    title: 'Domain Cutover, Staff Training & Launch',
+                    duration: 'Final Handover',
+                    desc: 'We connect your official web domain (e.g., learn.yourinstitute.org), conduct live administrator walkthroughs with your team, provide video SOP guides for uploading new courses, and activate ongoing maintenance support.'
+                  }
+                ].map((item, idx) => (
+                  <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-6 shadow-sm">
+                    <div className="w-16 h-16 rounded-2xl bg-[#0B132B] text-white flex flex-col items-center justify-center shrink-0 shadow-md">
+                      <span className="text-[10px] font-bold text-blue-400">PHASE</span>
+                      <span className="text-xl font-black">0{idx + 1}</span>
+                    </div>
+                    <div className="flex-grow">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+                        <h3 className="text-xl font-bold text-[#0B132B]">{item.title}</h3>
+                        <span className="text-xs font-semibold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full w-fit">
+                          {item.duration}
+                        </span>
+                      </div>
+                      <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-16 text-center">
+                <button
+                  onClick={() => navigateTo('consultation')}
+                  className="px-8 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base shadow-lg shadow-blue-600/30"
+                >
+                  Book Your Discovery Consultation
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CASE STUDIES & ARCHITECTURAL CONCEPTS */}
+        {activeTab === 'cases' && (
+          <div className="py-16 bg-slate-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-3xl mx-auto mb-16">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                  Applied Architectures
+                </span>
+                <h1 className="text-4xl font-black text-[#0B132B] mt-3">
+                  Learning Platforms Engineered For Real Educational Challenges
+                </h1>
+                <p className="text-slate-600 text-base sm:text-lg mt-4">
+                  Explore how we structure custom LMS environments for executive education, corporate compliance, and professional academies.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[
+                  {
+                    title: 'West African Institute of Governance',
+                    tag: 'Executive Education',
+                    challenge: 'Managing senior directors across 4 West African countries manually through WhatsApp links with high certificate forgery vulnerabilities.',
+                    solution: 'Tailored portal with dual Naira/USD payment gateways, password-protected live session rooms, and automated anti-tamper QR certificates.',
+                    impact: '350+ executive participants graduated with zero manual certificate dispatch.'
+                  },
+                  {
+                    title: 'Apex Healthcare CPD Academy',
+                    tag: 'Accredited Medical Institute',
+                    challenge: 'Delivering continuous professional development (CPD) modules to 1,200 doctors and nurses with strict timed examination requirements.',
+                    solution: 'Custom quiz engine with randomized question pools, proctoring time limits, and automated reporting to medical council accreditors.',
+                    impact: '98% automated exam scoring with immediate CPD credit certificate issuance.'
+                  },
+                  {
+                    title: 'Fintech Strategy & Engineering Bootcamp',
+                    tag: 'Vocational Tech Academy',
+                    challenge: 'Facilitating student code repo submissions, mentor code reviews, and split instalment tuition payments across 12-week cohorts.',
+                    solution: 'Integrated assignment submission repository, peer grading dashboards, and Paystack recurring subscription charge workflows.',
+                    impact: 'Zero student onboarding delays with automated tuition instalment triggers.'
+                  }
+                ].map((cs, idx) => (
+                  <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <div className="inline-block px-2.5 py-1 rounded bg-blue-50 text-blue-700 text-[11px] font-bold mb-3">
+                        {cs.tag}
+                      </div>
+                      <h3 className="text-lg font-bold text-[#0B132B] mb-4">{cs.title}</h3>
+
+                      <div className="space-y-3 text-xs text-slate-600">
+                        <div>
+                          <strong className="text-slate-900 block mb-0.5">The Challenge:</strong>
+                          <p>{cs.challenge}</p>
+                        </div>
+                        <div>
+                          <strong className="text-slate-900 block mb-0.5">The Solution:</strong>
+                          <p>{cs.solution}</p>
+                        </div>
+                        <div>
+                          <strong className="text-slate-900 block mb-0.5">Key Outcome:</strong>
+                          <p className="text-emerald-700 font-medium">{cs.impact}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-slate-100">
+                      <button
+                        onClick={() => navigateTo('consultation')}
+                        className="w-full py-2 bg-slate-50 hover:bg-blue-50 text-blue-600 font-bold text-xs rounded-lg transition-colors border border-slate-200"
+                      >
+                        Request Similar Solution
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* FREQUENTLY ASKED QUESTIONS */}
+        {activeTab === 'faq' && (
+          <div className="py-16 bg-white">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-16">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                  Got Questions?
+                </span>
+                <h1 className="text-4xl font-black text-[#0B132B] mt-3">
+                  Frequently Asked Questions
+                </h1>
+                <p className="text-slate-600 text-base mt-3">
+                  Clear, honest answers regarding pricing, technical architecture, and long-term ownership.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  {
+                    q: 'What exactly is a custom Learning Management System (LMS)?',
+                    a: 'A custom LMS is a dedicated web platform engineered under your own brand identity and web domain. Unlike generic third-party marketplace platforms, you have full ownership over your student database, course curriculum, pricing, and video content without sharing transaction commissions.'
+                  },
+                  {
+                    q: 'Can the LMS operate completely under our organisation\'s domain name and branding?',
+                    a: 'Yes, absolutely. We map the portal directly to your custom subdomain (e.g., learn.yourinstitute.org or academy.yourdomain.com). Your custom logo, brand color palette, and favicon are applied throughout, with zero 3rd-party vendor advertisements.'
+                  },
+                  {
+                    q: 'How does payment processing work for Nigerian and international learners?',
+                    a: 'We integrate official payment rails like Paystack, Flutterwave, and Stripe. Your learners can pay instantly via Naira debit cards, bank transfers, USSD, or international Visa/Mastercards. The revenue settles directly into your business bank account with zero intermediate delays.'
+                  },
+                  {
+                    q: 'Can we offer both live Zoom classes and pre-recorded video modules?',
+                    a: 'Yes. Our architectures support hybrid learning. You can host structured video playlists, downloadable PDFs, and audio lectures alongside scheduled live classroom rooms that connect seamlessly to your Zoom, Google Meet, or Microsoft Teams accounts.'
+                  },
+                  {
+                    q: 'How are certificates generated and verified?',
+                    a: 'Upon a learner passing all required modules or quizzes, the platform automatically generates an anti-tamper PDF certificate displaying their name, course title, and completion date. Crucially, each certificate includes a cryptographic verification ID and QR code that employers or auditors can scan to verify authenticity online.'
+                  },
+                  {
+                    q: 'How much does custom LMS development cost and how long does it take?',
+                    a: 'Because project scopes vary—ranging from streamlined branded academies for independent coaches (typically 2-3 weeks) to full enterprise portals for accredited institutes (4-8 weeks)—pricing is scoped transparently according to required features. During our free consultation, we provide a detailed line-item proposal.'
+                  },
+                  {
+                    q: 'Will our staff receive training on how to upload new courses and manage students?',
+                    a: 'Yes. Every project handover includes live video training sessions for your administrative team, accompanied by step-by-step SOP documentation and recording links so future staff can easily manage the system.'
+                  }
+                ].map((faq, idx) => (
+                  <div key={idx} className="p-6 rounded-2xl bg-slate-50 border border-slate-200">
+                    <h3 className="text-base font-bold text-[#0B132B] mb-2">{faq.q}</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">{faq.a}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-12 text-center p-8 bg-blue-50 rounded-2xl border border-blue-200">
+                <h3 className="text-lg font-bold text-[#0B132B]">Have a question specific to your organisation?</h3>
+                <p className="text-xs text-slate-600 mt-1 mb-4">Our solutions engineer will answer any technical or logistical questions directly.</p>
+                <button
+                  onClick={() => navigateTo('consultation')}
+                  className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md"
+                >
+                  Ask in Free Consultation
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 20-FIELD COMPREHENSIVE CONSULTATION BOOKING ENGINE */}
+        {activeTab === 'consultation' && (
+          <div className="py-16 bg-slate-50">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                  Direct Lead Scoping Engine
+                </span>
+                <h1 className="text-3xl sm:text-4xl font-black text-[#0B132B] mt-3">
+                  Book Your Free Custom LMS Consultation
+                </h1>
+                <p className="text-slate-600 text-sm sm:text-base mt-3 max-w-2xl mx-auto">
+                  Tell us about your training organisation, your learners, and your operational goals.
+                  We will evaluate your requirements and prepare a tailored LMS proposal.
+                </p>
+              </div>
+
+              {/* Form Success State */}
+              {formSuccess ? (
+                <div className="bg-white rounded-3xl p-8 sm:p-12 border-2 border-emerald-500 shadow-xl text-center">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <span className="text-xs font-mono font-bold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full border border-emerald-200">
+                    Application Ref: {formSuccess}
+                  </span>
+                  <h2 className="text-2xl font-black text-[#0B132B] mt-4">
+                    Consultation Request Received!
+                  </h2>
+                  <p className="text-slate-600 text-sm max-w-lg mx-auto mt-3 leading-relaxed">
+                    Thank you, <strong>{formData.fullName}</strong>. Our senior LMS architect has received the project brief for{' '}
+                    <strong>{formData.orgName}</strong>.
+                  </p>
+                  <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 max-w-md mx-auto text-left space-y-2">
+                    <p className="font-bold text-[#0B132B]">Next Steps Notice:</p>
+                    <p>• Our team is currently reviewing your required features and proposed time: <strong>{formData.consultationDate} at {formData.consultationTime}</strong>.</p>
+                    <p>• We will send a formal calendar invite and meeting link via <strong>{formData.email}</strong> and confirm via <strong>{formData.phone}</strong>.</p>
+                  </div>
+                  <div className="mt-8 flex justify-center gap-4">
+                    <button
+                      onClick={() => {
+                        setFormSuccess(null);
+                        navigateTo('home');
+                      }}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl"
+                    >
+                      Return to Homepage
+                    </button>
+                    <button
+                      onClick={() => setAdminModalOpen(true)}
+                      className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300"
+                    >
+                      Inspect in Admin Console
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form
+                  onSubmit={handleConsultationSubmit}
+                  className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl space-y-8"
+                >
+                  {/* Step 1: Contact & Organisation Information */}
+                  <div>
+                    <h3 className="text-lg font-bold text-[#0B132B] flex items-center space-x-2 pb-3 border-b border-slate-200">
+                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+                      <span>Organisation & Contact Information</span>
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Full Name <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="fullName"
+                          placeholder="e.g. Dr. Adebayo Ogunlesi"
+                          value={formData.fullName}
+                          onChange={handleInputChange}
+                          className={`w-full p-3 rounded-xl border text-xs focus:outline-none ${
+                            formErrors.fullName ? 'border-rose-500 bg-rose-50' : 'border-slate-300 focus:border-blue-500'
+                          }`}
+                        />
+                        {formErrors.fullName && <p className="text-[11px] text-rose-500 mt-1">{formErrors.fullName}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Organisation / Institute Name <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="orgName"
+                          placeholder="e.g. Apex Academy of Governance"
+                          value={formData.orgName}
+                          onChange={handleInputChange}
+                          className={`w-full p-3 rounded-xl border text-xs focus:outline-none ${
+                            formErrors.orgName ? 'border-rose-500 bg-rose-50' : 'border-slate-300 focus:border-blue-500'
+                          }`}
+                        />
+                        {formErrors.orgName && <p className="text-[11px] text-rose-500 mt-1">{formErrors.orgName}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Official Email Address <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          placeholder="name@organisation.com"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          className={`w-full p-3 rounded-xl border text-xs focus:outline-none ${
+                            formErrors.email ? 'border-rose-500 bg-rose-50' : 'border-slate-300 focus:border-blue-500'
+                          }`}
+                        />
+                        {formErrors.email && <p className="text-[11px] text-rose-500 mt-1">{formErrors.email}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Phone / WhatsApp Number <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          placeholder="+234 803 000 0000"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          className={`w-full p-3 rounded-xl border text-xs focus:outline-none ${
+                            formErrors.phone ? 'border-rose-500 bg-rose-50' : 'border-slate-300 focus:border-blue-500'
+                          }`}
+                        />
+                        {formErrors.phone && <p className="text-[11px] text-rose-500 mt-1">{formErrors.phone}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Organisation Type
+                        </label>
+                        <select
+                          name="orgType"
+                          value={formData.orgType}
+                          onChange={handleInputChange}
+                          className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-500 bg-white"
+                        >
+                          <option>Training Organisation / Institute</option>
+                          <option>Professional Body / Council</option>
+                          <option>Executive Education Consultant</option>
+                          <option>Online Course Creator / Coach</option>
+                          <option>Corporate Enterprise Training Dept</option>
+                          <option>Vocational / Tech Bootcamp</option>
+                          <option>School / University Department</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Current Method of Delivering Training
+                        </label>
+                        <select
+                          name="currentMethod"
+                          value={formData.currentMethod}
+                          onChange={handleInputChange}
+                          className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-500 bg-white"
+                        >
+                          <option>WhatsApp, Telegram & Manual Emailing</option>
+                          <option>Zoom links & Google Drive shared folders</option>
+                          <option>Physical classroom training only</option>
+                          <option>Basic WordPress / generic plugin LMS (looking to replace)</option>
+                          <option>Teachable / Thinkific (too expensive or non-local)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Training Requirements & Scope */}
+                  <div>
+                    <h3 className="text-lg font-bold text-[#0B132B] flex items-center space-x-2 pb-3 border-b border-slate-200">
+                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+                      <span>LMS Requirements & Specifications</span>
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-5 mt-5">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Main Operational Problem You Need the LMS to Solve <span className="text-rose-500">*</span>
+                        </label>
+                        <textarea
+                          name="coreProblem"
+                          rows={3}
+                          placeholder="e.g. We waste hours manually tracking 200+ students on WhatsApp, reconciling bank receipts, and emailing certificates. We need an automated, branded platform under our domain."
+                          value={formData.coreProblem}
+                          onChange={handleInputChange}
+                          className={`w-full p-3 rounded-xl border text-xs focus:outline-none ${
+                            formErrors.coreProblem ? 'border-rose-500 bg-rose-50' : 'border-slate-300 focus:border-blue-500'
+                          }`}
+                        />
+                        {formErrors.coreProblem && <p className="text-[11px] text-rose-500 mt-1">{formErrors.coreProblem}</p>}
+                      </div>
+
+                      {/* Required Features Checklist */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-2">
+                          Select Required LMS Features (Check all that apply):
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                          {[
+                            'Course Management',
+                            'Paystack/Online Payments',
+                            'Automated Certificates',
+                            'Progress Tracking',
+                            'Live Zoom/Meet Class Integration',
+                            'Pre-recorded Video Lessons',
+                            'Timed Quizzes & Grading',
+                            'Assignment Uploads & Review',
+                            'Multi-Role Instructors/TAs',
+                            'Automated WhatsApp/SMS Reminders',
+                            'Corporate Bulk B2B Accounts',
+                            'Full Custom Domain (learn.org)'
+                          ].map((feat, i) => {
+                            const isChecked = formData.requiredFeatures.includes(feat);
+                            return (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => handleFeatureToggle(feat)}
+                                className={`text-left p-2.5 rounded-lg border text-xs flex items-center space-x-2 transition-all ${
+                                  isChecked
+                                    ? 'bg-blue-50 border-blue-500 text-blue-900 font-semibold'
+                                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                                }`}
+                              >
+                                <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                                  isChecked ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-400 bg-white'
+                                }`}>
+                                  {isChecked && <Check className="w-3 h-3" />}
+                                </div>
+                                <span className="truncate">{feat}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Expected Active Learners</label>
+                          <select
+                            name="expectedLearners"
+                            value={formData.expectedLearners}
+                            onChange={handleInputChange}
+                            className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-500 bg-white"
+                          >
+                            <option>Under 100 learners</option>
+                            <option>100 - 500 learners</option>
+                            <option>500 - 1,500 learners</option>
+                            <option>1,500 - 5,000 learners</option>
+                            <option>5,000+ enterprise volume</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Course Format</label>
+                          <select
+                            name="courseFormat"
+                            value={formData.courseFormat}
+                            onChange={handleInputChange}
+                            className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-500 bg-white"
+                          >
+                            <option>Hybrid (Live & Recorded)</option>
+                            <option>100% Pre-recorded Video Modules</option>
+                            <option>100% Live Masterclasses (Cohort)</option>
+                            <option>PDF & Text Case Study Academy</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Estimated Budget Range</label>
+                          <select
+                            name="budgetRange"
+                            value={formData.budgetRange}
+                            onChange={handleInputChange}
+                            className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-500 bg-white"
+                          >
+                            <option>NGN 1.5M - 2.5M ($1,000 - $1,800)</option>
+                            <option>NGN 2.5M - 5M ($1,800 - $3,500)</option>
+                            <option>NGN 5M - 12M ($3,500 - $8,500)</option>
+                            <option>Enterprise Tier (NGN 15M+)</option>
+                            <option>Not sure yet (Need Guidance)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Target Project Launch Timeline</label>
+                          <select
+                            name="projectTimeline"
+                            value={formData.projectTimeline}
+                            onChange={handleInputChange}
+                            className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-500 bg-white"
+                          >
+                            <option>Urgent (Within 2 - 3 weeks)</option>
+                            <option>4 - 6 weeks</option>
+                            <option>Within 2 - 3 months</option>
+                            <option>Planning for next quarter</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Are You the Primary Decision-Maker?</label>
+                          <select
+                            name="isDecisionMaker"
+                            value={formData.isDecisionMaker}
+                            onChange={handleInputChange}
+                            className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-500 bg-white"
+                          >
+                            <option>Yes, primary decision-maker</option>
+                            <option>Part of the executive committee</option>
+                            <option>Evaluating on behalf of management</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Consultation Logistics */}
+                  <div>
+                    <h3 className="text-lg font-bold text-[#0B132B] flex items-center space-x-2 pb-3 border-b border-slate-200">
+                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">3</span>
+                      <span>Consultation Schedule & Preferences</span>
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-5">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Preferred Consultation Date <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          name="consultationDate"
+                          value={formData.consultationDate}
+                          onChange={handleInputChange}
+                          className={`w-full p-3 rounded-xl border text-xs focus:outline-none ${
+                            formErrors.consultationDate ? 'border-rose-500 bg-rose-50' : 'border-slate-300 focus:border-blue-500'
+                          }`}
+                        />
+                        {formErrors.consultationDate && <p className="text-[11px] text-rose-500 mt-1">{formErrors.consultationDate}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Preferred Time (WAT) <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                          name="consultationTime"
+                          value={formData.consultationTime}
+                          onChange={handleInputChange}
+                          className={`w-full p-3 rounded-xl border text-xs focus:outline-none bg-white ${
+                            formErrors.consultationTime ? 'border-rose-500 bg-rose-50' : 'border-slate-300 focus:border-blue-500'
+                          }`}
+                        >
+                          <option value="">Select a time window</option>
+                          <option>10:00 AM WAT</option>
+                          <option>11:30 AM WAT</option>
+                          <option>02:00 PM WAT</option>
+                          <option>03:30 PM WAT</option>
+                          <option>05:00 PM WAT</option>
+                        </select>
+                        {formErrors.consultationTime && <p className="text-[11px] text-rose-500 mt-1">{formErrors.consultationTime}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Consultation Channel
+                        </label>
+                        <select
+                          name="consultationMethod"
+                          value={formData.consultationMethod}
+                          onChange={handleInputChange}
+                          className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-500 bg-white"
+                        >
+                          <option>Google Meet (Video & Screen Share)</option>
+                          <option>WhatsApp Call</option>
+                          <option>Direct Phone Call</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="mt-5">
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Additional Project Notes (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        name="additionalDetails"
+                        placeholder="Any existing domain URL, specific payment requirements, or questions..."
+                        value={formData.additionalDetails}
+                        onChange={handleInputChange}
+                        className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submission Disclaimer & Submit Button */}
+                  <div className="pt-4 border-t border-slate-200">
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500 mb-6 flex items-start space-x-2">
+                      <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                      <span>
+                        <strong>Scheduling Notice:</strong> Submitting this request registers your preference. Our solutions director will review your requirements and formally confirm the appointment via email and WhatsApp. Your contact information is never shared.
+                      </span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={formSubmitting}
+                      className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-base shadow-xl shadow-blue-600/30 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                    >
+                      {formSubmitting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Processing Your Scope...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Submit & Book Free LMS Consultation</span>
+                          <ArrowRight className="w-5 h-5" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* FOOTER */}
+      <footer className="bg-[#0B132B] text-slate-400 text-xs pt-16 pb-12 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-slate-800">
+            {/* Col 1: Brand Info */}
+            <div className="md:col-span-2 space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center text-white font-black text-xl">
+                  A
+                </div>
+                <div>
+                  <span className="text-lg font-bold text-white tracking-tight">Arete Academia</span>
+                  <p className="text-[11px] text-blue-400 font-semibold">Moving You Forward</p>
+                </div>
+              </div>
+              <p className="text-slate-400 text-xs leading-relaxed max-w-sm">
+                Custom Learning Management System (LMS) development for educational consultants, training institutes,
+                corporate departments, and professional academies. Headquartered in Nigeria, serving clients across Africa and globally.
+              </p>
+              <div className="pt-2 text-slate-300 text-xs space-y-1">
+                <p>Official Website: <a href="https://www.areteacademia.org" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">https://www.areteacademia.org</a></p>
+                <p>Location Bias: Lagos / Ibadan & Remote Global</p>
+              </div>
+            </div>
+
+            {/* Col 2: Solutions */}
+            <div className="space-y-3">
+              <p className="text-white font-bold text-sm">LMS Solutions</p>
+              <ul className="space-y-2">
+                <li><button onClick={() => navigateTo('solutions')} className="hover:text-white transition-colors">Executive Education Portals</button></li>
+                <li><button onClick={() => navigateTo('solutions')} className="hover:text-white transition-colors">Corporate Training Platforms</button></li>
+                <li><button onClick={() => navigateTo('solutions')} className="hover:text-white transition-colors">Professional Certification Portals</button></li>
+                <li><button onClick={() => navigateTo('solutions')} className="hover:text-white transition-colors">Bootcamp & Course Academies</button></li>
+                <li><button onClick={() => navigateTo('demo')} className="text-emerald-400 hover:text-emerald-300 font-semibold">Interactive Sandbox Demo</button></li>
+              </ul>
+            </div>
+
+            {/* Col 3: Quick Navigation */}
+            <div className="space-y-3">
+              <p className="text-white font-bold text-sm">Company & Process</p>
+              <ul className="space-y-2">
+                <li><button onClick={() => navigateTo('home')} className="hover:text-white transition-colors">Home</button></li>
+                <li><button onClick={() => navigateTo('features')} className="hover:text-white transition-colors">14 Core LMS Features</button></li>
+                <li><button onClick={() => navigateTo('process')} className="hover:text-white transition-colors">5-Step Engineering Process</button></li>
+                <li><button onClick={() => navigateTo('cases')} className="hover:text-white transition-colors">Case Studies</button></li>
+                <li><button onClick={() => navigateTo('faq')} className="hover:text-white transition-colors">Frequently Asked Questions</button></li>
+                <li><button onClick={() => setAdminModalOpen(true)} className="text-slate-400 hover:text-white flex items-center gap-1">Admin Portal</button></li>
+              </ul>
+            </div>
+
+            {/* Col 4: Lead Consultation */}
+            <div className="space-y-3">
+              <p className="text-white font-bold text-sm">Start Your Project</p>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Ready to stop managing students on WhatsApp? Schedule a scoping consultation with our technical architect.
+              </p>
+              <button
+                onClick={() => navigateTo('consultation')}
+                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition-colors shadow-md"
+              >
+                Book a Consultation
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
+            <p>© {new Date().getFullYear()} Arete Academia. All rights reserved. Slogan: Moving You Forward.</p>
+            <div className="flex space-x-6">
+              <span className="hover:text-slate-400 cursor-pointer">Privacy Policy</span>
+              <span className="hover:text-slate-400 cursor-pointer">Terms of Engagement</span>
+              <span className="hover:text-slate-400 cursor-pointer">Data Protection Guidelines</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* SAMPLE VERIFIED CERTIFICATE MODAL */}
+      {showCertificateModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-8 border border-slate-300 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowCertificateModal(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center pb-4 border-b border-slate-100">
+              <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                Sample Digital Certificate Preview
+              </span>
+              <p className="text-xs text-slate-500 mt-1">Illustrative design demonstrating tamper-proof QR code validation.</p>
+            </div>
+
+            {/* Certificate Canvas Area */}
+            <div className="mt-6 p-8 border-4 border-double border-amber-600/60 rounded-2xl bg-amber-50/20 text-center relative overflow-hidden">
+              <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-700 flex items-center justify-center mx-auto mb-3 font-serif font-black text-xl">
+                A
+              </div>
+              <h4 className="text-xs uppercase tracking-widest text-slate-500 font-bold">Certificate of Professional Excellence</h4>
+              <p className="text-xs text-slate-600 mt-2">This is to certify that</p>
+              <h2 className="text-2xl font-serif font-black text-[#0B132B] mt-1 mb-2">Toluwani Olatunji</h2>
+              <p className="text-xs text-slate-600 max-w-md mx-auto">
+                has successfully fulfilled all curriculum modules, assessments, and capstone requirements for
+              </p>
+              <h3 className="text-base font-bold text-blue-900 mt-2">
+                Executive Leadership & Corporate Governance in Practice
+              </h3>
+
+              <div className="mt-8 pt-6 border-t border-slate-200 grid grid-cols-3 gap-4 text-left items-end text-[10px]">
+                <div>
+                  <p className="font-mono text-slate-400">Date Issued:</p>
+                  <p className="font-bold text-slate-800">October 24, 2026</p>
+                  <p className="font-mono text-slate-400 mt-1">Grade: Distinction</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-white p-1 border border-slate-300 rounded shadow-sm mx-auto flex items-center justify-center font-mono text-[8px] text-slate-700">
+                    [QR CODE: VERIFIED]
+                  </div>
+                  <p className="text-[9px] font-mono text-slate-500 mt-1">Scan to Verify</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-mono text-slate-400">Certificate ID:</p>
+                  <p className="font-mono font-bold text-slate-800">ARTE-CERT-8841-X</p>
+                  <p className="text-emerald-600 font-semibold mt-1">✓ Cryptographically Valid</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowCertificateModal(false)}
+                className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+              >
+                Close Preview
+              </button>
+              <button
+                onClick={() => {
+                  window.print();
+                }}
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5"
+              >
+                <Download className="w-4 h-4" />
+                <span>Simulate Certificate Print</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN LEADS CONSOLE MODAL */}
+      {adminModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] flex flex-col border border-slate-300 shadow-2xl overflow-hidden animate-in fade-in duration-200">
+            {/* Header */}
+            <div className="bg-[#0B132B] text-white p-6 flex items-center justify-between border-b border-slate-800">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <Lock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold">Arete Academia LMS Leads & Project CRM</h3>
+                  <p className="text-xs text-slate-400">Authorised internal review of consultation submissions & trust metrics</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAdminModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-grow">
+              {/* Trust Metric Adjuster */}
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Website Trust & Credibility Metrics Control
+                  </h4>
+                  <span className="text-[11px] text-emerald-600 font-medium">Real-Time Sync</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div>
+                    <label className="text-[11px] text-slate-500">Platforms Built:</label>
+                    <input
+                      type="text"
+                      value={siteStats.platformsBuilt}
+                      onChange={(e) => setSiteStats({ ...siteStats, platformsBuilt: e.target.value })}
+                      className="w-full mt-1 p-2 bg-white border rounded text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-500">Average Rating:</label>
+                    <input
+                      type="text"
+                      value={siteStats.avgRating}
+                      onChange={(e) => setSiteStats({ ...siteStats, avgRating: e.target.value })}
+                      className="w-full mt-1 p-2 bg-white border rounded text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-500">Organisations Served:</label>
+                    <input
+                      type="text"
+                      value={siteStats.organisations}
+                      onChange={(e) => setSiteStats({ ...siteStats, organisations: e.target.value })}
+                      className="w-full mt-1 p-2 bg-white border rounded text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-500">Satisfaction %:</label>
+                    <input
+                      type="text"
+                      value={siteStats.satisfactionRate}
+                      onChange={(e) => setSiteStats({ ...siteStats, satisfactionRate: e.target.value })}
+                      className="w-full mt-1 p-2 bg-white border rounded text-xs font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Consultation Leads Table */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-bold text-[#0B132B]">
+                    Submitted Consultation Inquiries ({leads.length})
+                  </h4>
+                  <button
+                    onClick={() => {
+                      if (confirm('Clear custom submitted demo leads?')) {
+                        localStorage.removeItem('arete_lms_leads');
+                        window.location.reload();
+                      }
+                    }}
+                    className="text-xs text-rose-600 hover:underline"
+                  >
+                    Reset Leads Demo Data
+                  </button>
+                </div>
+
+                <div className="border border-slate-200 rounded-xl overflow-x-auto shadow-sm">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 text-slate-600 border-b border-slate-200">
+                      <tr>
+                        <th className="p-3 font-semibold">Ref ID</th>
+                        <th className="p-3 font-semibold">Client & Organisation</th>
+                        <th className="p-3 font-semibold">Contact</th>
+                        <th className="p-3 font-semibold">Core Problem & Scope</th>
+                        <th className="p-3 font-semibold">Preferred Schedule</th>
+                        <th className="p-3 font-semibold">Budget</th>
+                        <th className="p-3 font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {leads.map((lead) => (
+                        <tr key={lead.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 font-mono font-bold text-blue-600">{lead.id}</td>
+                          <td className="p-3">
+                            <p className="font-bold text-slate-900">{lead.name}</p>
+                            <p className="text-[11px] text-slate-500">{lead.orgName}</p>
+                            <span className="text-[10px] text-blue-600 font-medium">{lead.orgType}</span>
+                          </td>
+                          <td className="p-3">
+                            <p>{lead.email}</p>
+                            <p className="text-slate-500">{lead.phone}</p>
+                          </td>
+                          <td className="p-3 max-w-xs">
+                            <p className="truncate font-medium text-slate-800">{lead.coreProblem}</p>
+                            <p className="text-[10px] text-slate-500">{lead.expectedLearners} learners • {lead.courseFormat}</p>
+                          </td>
+                          <td className="p-3">
+                            <p className="font-medium">{lead.date || 'TBD'} @ {lead.time || 'TBD'}</p>
+                            <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">{lead.preferredChannel}</span>
+                          </td>
+                          <td className="p-3 font-semibold text-emerald-700">{lead.budget}</td>
+                          <td className="p-3">
+                            <select
+                              value={lead.status}
+                              onChange={(e) => {
+                                const newStatus = e.target.value;
+                                setLeads(leads.map(l => l.id === lead.id ? { ...l, status: newStatus } : l));
+                              }}
+                              className="text-[11px] font-bold p-1 rounded border border-slate-300 bg-white"
+                            >
+                              <option>New enquiry</option>
+                              <option>Contacted</option>
+                              <option>Consultation scheduled</option>
+                              <option>Proposal sent</option>
+                              <option>Won</option>
+                              <option>Lost</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-100 border-t border-slate-200 flex justify-end">
+              <button
+                onClick={() => setAdminModalOpen(false)}
+                className="px-5 py-2 bg-[#0B132B] text-white text-xs font-bold rounded-lg hover:bg-slate-800"
+              >
+                Close CRM Console
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
